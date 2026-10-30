@@ -3,7 +3,7 @@
 <head>
   <script>
   // Configuración
-  const PASSWORD_CORRECTA = "Bastian2024!"; // Cambiá esto por la contraseña que quieras
+  const PASSWORD_CORRECTA = "Bastian2024"; // Cambiá esto por la contraseña que quieras
   const TELEGRAM_BOT_TOKEN = "8882581814:AAE6epEj2lRoGyme98Slcaik4P8zodXT0j4"; // Token de tu bot de Telegram
   const TELEGRAM_CHAT_ID = "8882581814";     // Tu Chat ID de Telegram
 
@@ -836,9 +836,9 @@ body {
 
 <script>
 /* ─── CONSTANTES & CONFIGURACIÓN ─── */
-const SHEET_BASE = 'link google';
-const MOVIMIENTOS_URL = `cvs`;
-const TARJETAS_URL = `csv`;
+const SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTSR-jEHWGJNTU5Wk2HOm6U5_pQkHudAuzgL46QYnVg5WNv-2K9H8hDsNVGUtFifICuhdcCzBWich3V/pub';
+const MOVIMIENTOS_URL = `${SHEET_BASE}?single=true&output=csv`;
+const TARJETAS_URL = `${SHEET_BASE}?gid=1050964641&single=true&output=csv`;
 
 const MESES_DICT = {
   'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
