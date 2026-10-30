@@ -4,8 +4,8 @@
   <script>
   // Configuración de Seguridad y Notificaciones
   const PASSWORD_CORRECTA = "Bastian2024"; // Cambiá esto por la contraseña que quieras
-  const TELEGRAM_BOT_TOKEN = "8882581814:AAE6epEj2lRoGyme98Slcaik4P8zodXT0j4"; // Tu token de bot
-  const TELEGRAM_CHAT_ID = "8882581814";     // Tu Chat ID personal de Telegram
+  const TELEGRAM_BOT_TOKEN = "8882581814:AAE6epEj2lRoGyme98Slcaik4P8zodXT0j4"; 
+  const TELEGRAM_CHAT_ID = "8882581814";     
 
   function notificarTelegram(mensaje) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
@@ -21,7 +21,6 @@
     }).catch(err => console.error("Error al enviar alerta:", err));
   }
 
-  // Lógica de acceso
   let passIngresada = prompt("Ingrese la contraseña de acceso al Dashboard:");
 
   if (passIngresada === PASSWORD_CORRECTA) {
@@ -30,13 +29,14 @@
     notificarTelegram(`🚨 Intento de acceso FALLIDO al Dashboard. Intento con clave: "${passIngresada || 'vacío'}"`);
     alert("Contraseña incorrecta. Acceso denegado.");
     document.write("<h1 style='text-align:center; margin-top:50px; font-family:sans-serif;'>Acceso No Autorizado</h1>");
-    window.stop(); // Detiene la carga del resto del sitio
+    window.stop();
   }
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gastos Personales - Nuestro Termómetro Económico</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 /* ─── VARIABLES TEMA SAAS FINTECH ─── */
 :root {
@@ -77,7 +77,6 @@ body.light {
   --softer: #F8FAFC;
   --divider: #E2E8F0;
   --border: #E2E8F0;
-  
   --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
 }
 
@@ -100,7 +99,7 @@ body {
 .sidebar {
   width: 270px; background: var(--sidebar-bg); border-right: 1px solid var(--border);
   padding: 1.75rem 1.25rem; display: flex; flex-direction: column; justify-content: space-between;
-  position: sticky; top: 0; height: 100vh; flex-shrink: 0; z-index: 100; transition: transform 0.3s ease;
+  position: sticky; top: 0; height: 100vh; flex-shrink: 0; z-index: 100;
 }
 
 .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 2rem; }
@@ -112,6 +111,27 @@ body {
 .brand-text h2 { font-size: 16px; font-weight: 700; color: var(--t-fff); }
 .brand-text p { font-size: 11px; color: var(--t-aaa); }
 
+.sidebar-cycle-wrap { margin-bottom: 1.5rem; }
+.dropdown-wrap { position: relative; width: 100%; }
+.dropdown-btn {
+  width: 100%; background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+  padding: 10px 14px; font-size: 13px; font-weight: 600; color: var(--t-ccc); cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.dropdown-chevron { color: var(--t-aaa); font-size: 10px; transition: transform 0.2s; }
+.dropdown-chevron.open { transform: rotate(180deg); }
+.dropdown-menu {
+  position: absolute; top: calc(100% + 6px); left: 0; width: 100%; background: var(--card);
+  border: 1px solid var(--border); border-radius: 12px; z-index: 100; display: none; padding: 6px; max-height: 280px; overflow-y: auto;
+}
+.dropdown-menu.open { display: block; }
+.dropdown-group-label { font-size: 10px; font-weight: 700; color: var(--t-aaa); text-transform: uppercase; padding: 8px 10px 4px; }
+.dropdown-item { padding: 8px 10px; font-size: 12px; color: var(--t-ccc); border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+.dropdown-item:hover { background: var(--soft); color: var(--t-fff); }
+.dropdown-item.active { color: var(--t-fff); background: rgba(59, 130, 246, 0.15); font-weight: 600; }
+.dropdown-item .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-blue); opacity: 0; }
+.dropdown-item.active .dot { opacity: 1; }
+
 .nav-menu { display: flex; flex-direction: column; gap: 6px; }
 .nav-item {
   display: flex; align-items: center; gap: 12px; padding: 11px 14px; font-size: 13px; font-weight: 500;
@@ -119,14 +139,39 @@ body {
 }
 .nav-item:hover { color: var(--t-fff); background: var(--soft); }
 .nav-item.active { color: var(--t-fff); background: var(--accent-blue); font-weight: 600; }
+
+.sidebar-footer { padding-top: 1.5rem; border-top: 1px solid var(--divider); display: flex; align-items: center; justify-content: space-between; }
+.btn-icon { background: var(--card); border: 1px solid var(--border); border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; color: var(--t-ccc); cursor: pointer; }
+
 .main-wrapper { flex: 1; padding: 2rem 2.5rem; overflow-y: auto; width: 100%; }
-.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; }
-.metric, .summary-strip, .chart-card, .table-card {
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.75rem; flex-wrap: wrap; gap: 12px; }
+.top-bar-title h1 { font-size: 22px; font-weight: 700; color: var(--t-fff); }
+.top-bar-title p { font-size: 13px; color: var(--t-aaa); }
+.ciclo-badge { font-size: 12px; font-weight: 600; color: var(--t-ccc); background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 6px 16px; }
+
+.dashboard-grid { display: grid; grid-template-columns: 1fr 340px; gap: 1.5rem; }
+.grid-main-col, .grid-side-col { display: flex; flex-direction: column; gap: 1.5rem; }
+
+.metric, .summary-strip, .proj-banner, .ciclo-progress, .chart-card, .chart-card-full, .table-card, .cv-kpi-card {
   background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 1.25rem 1.5rem; box-shadow: var(--shadow);
 }
 .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .metric-label { font-size: 11px; font-weight: 600; color: var(--t-aaa); text-transform: uppercase; margin-bottom: 6px; }
 .metric-value { font-size: 22px; font-weight: 700; color: var(--t-fff); }
+
+.summary-strip { margin-bottom: 1.5rem; display: flex; align-items: center; gap: 16px; padding: 1rem 1.5rem; }
+.summary-item { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.summary-item + .summary-item { border-left: 1px solid var(--divider); padding-left: 16px; }
+.summary-label { font-size: 11px; font-weight: 600; color: var(--t-aaa); text-transform: uppercase; }
+.summary-value { font-size: 18px; font-weight: 700; color: var(--t-fff); }
+.summary-value.danger { color: var(--accent-red); }
+.summary-value.success { color: var(--accent-green); }
+
+.ranking-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.ranking-table tr { border-bottom: 1px solid var(--divider); }
+.ranking-table th { padding: 10px 8px; color: var(--t-aaa); font-size: 11px; text-transform: uppercase; text-align: left; }
+.ranking-table td { padding: 10px 8px; color: var(--t-e8); }
+.cat-tag { background: var(--soft); padding: 4px 10px; border-radius: 6px; font-size: 11px; color: var(--t-ccc); border: 1px solid var(--border); }
 .loading { text-align: center; padding: 4rem 0; color: var(--t-aaa); font-size: 15px; }
 .error-msg { background: rgba(239, 68, 68, 0.1); color: #FCA5A5; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 14px 18px; margin-bottom: 1rem; }
 </style>
@@ -140,91 +185,169 @@ body {
         <div class="brand-icon">🏡</div>
         <div class="brand-text">
           <h2>Gastos Personales</h2>
-          <p>Termómetro Seguro</p>
+          <p>Termómetro Económico</p>
         </div>
       </div>
+
+      <div class="sidebar-cycle-wrap">
+        <div class="dropdown-wrap" id="dropdownWrap">
+          <button class="dropdown-btn" id="dropdownBtn" onclick="toggleDropdown()">
+            <span id="dropdownLabel">Cargando...</span>
+            <span class="dropdown-chevron" id="dropdownChevron">▼</span>
+          </button>
+          <div class="dropdown-menu" id="dropdownMenu"></div>
+        </div>
+      </div>
+
       <nav class="nav-menu">
-        <button class="nav-item active" onclick="setTab('mes', this)"><span>📊</span> Este ciclo</button>
+        <button class="nav-item active" onclick="setTab('mes', this)"><span class="nav-icon">📊</span> Este ciclo</button>
+        <button class="nav-item" onclick="setTab('detalle', this)"><span class="nav-icon">📄</span> Detalle</button>
       </nav>
+    </div>
+
+    <div class="sidebar-footer">
+      <span style="font-size:11px; color:var(--t-aaa);" id="dashSub">Cargando...</span>
+      <div style="display:flex; gap:8px;">
+        <button class="btn-icon" id="themeBtn" onclick="toggleTheme()" title="Tema">☾</button>
+        <button class="btn-icon" onclick="loadData(true)" title="Actualizar">↻</button>
+      </div>
     </div>
   </aside>
 
   <main class="main-wrapper">
     <div class="top-bar">
-      <div>
-        <h1 id="tabTitleHeader" style="color:var(--t-fff); font-size:22px;">Resumen del Ciclo</h1>
-        <p style="color:var(--t-aaa); font-size:13px;">Panel seguro conectado a datos locales</p>
+      <div class="top-bar-title">
+        <h1 id="tabTitleHeader">Resumen del Ciclo</h1>
+        <p>Visión general de gastos e ingresos seguros</p>
       </div>
+      <span class="ciclo-badge" id="cicloBadge">Ciclo: —</span>
     </div>
 
     <div id="errorBox" style="display:none;" class="error-msg"></div>
     <div id="loadingBox" class="loading">Cargando datos de forma segura desde datos.json...</div>
 
-    <div id="tabMes">
+    <!-- TAB: ESTE CICLO -->
+    <div id="tabMes" style="display:none;">
       <div class="metrics" id="metricsBox"></div>
+      <div class="summary-strip" id="summaryStrip"></div>
+      <div class="dashboard-grid">
+        <div class="grid-main-col">
+          <div class="chart-card">
+            <p style="font-size:12px; font-weight:700; color:var(--t-aaa); margin-bottom:14px; text-transform:uppercase;">Gastos por fecha</p>
+            <div style="position:relative; height:240px;"><canvas id="barChart"></canvas></div>
+          </div>
+          <div class="table-card">
+            <p style="font-size:12px; font-weight:700; color:var(--t-aaa); margin-bottom:14px; text-transform:uppercase;">Ranking de categorías</p>
+            <table class="ranking-table" id="rankingTable"></table>
+          </div>
+        </div>
+        <div class="grid-side-col">
+          <div class="chart-card">
+            <p style="font-size:12px; font-weight:700; color:var(--t-aaa); margin-bottom:14px; text-transform:uppercase;">Distribución</p>
+            <div style="position:relative; height:220px;"><canvas id="donutChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: DETALLE -->
+    <div id="tabDetalle" style="display:none;">
       <div class="table-card">
-        <p style="font-size:12px; font-weight:700; color:var(--t-aaa); margin-bottom:14px; text-transform:uppercase;">Transacciones Recientes</p>
-        <div id="tablaContenido" style="color:var(--t-ccc);">Cargando transacciones...</div>
+        <p style="font-size:12px; font-weight:700; color:var(--t-aaa); margin-bottom:14px; text-transform:uppercase;">Registro de movimientos</p>
+        <div style="overflow-x:auto;">
+          <table class="ranking-table" id="logTable" style="width:100%;"></table>
+        </div>
       </div>
     </div>
   </main>
 </div>
 
 <script>
-// URL SEGURA: Apunta a tu archivo local en lugar de exponer Google Sheets
+// APUNTA AL ARCHIVO LOCAL SEGURO (Oculta las URLs de Google Sheets)
 const DATOS_URL = './datos.json';
 
+let CICLOS = [];
+let cicloActivo = 0;
 let tabActivo = 'mes';
+let datosCache = {};
+let logDatos = [];
+let donutInst, barInst;
+
+const fmt = n => '$' + Math.round(n).toLocaleString('es-AR');
+
+function toggleDropdown() {
+  document.getElementById('dropdownMenu').classList.toggle('open');
+  document.getElementById('dropdownChevron').classList.toggle('open');
+}
 
 function setTab(tab, el) {
+  tabActivo = tab;
   document.querySelectorAll('.nav-item').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  document.getElementById('tabMes').style.display = tab === 'mes' ? 'block' : 'none';
+  document.getElementById('tabDetalle').style.display = tab === 'detalle' ? 'block' : 'none';
 }
 
 function loadData() {
-  document.getElementById('loadingBox').style.display='block';
-  document.getElementById('errorBox').style.display='none';
+  document.getElementById('loadingBox').style.display = 'block';
+  document.getElementById('errorBox').style.display = 'none';
 
   fetch(DATOS_URL)
-    .then(response => {
-      if (!response.ok) throw new Error("No se pudo encontrar o cargar el archivo datos.json");
-      return response.json();
-    })
+    .then(res => res.json())
     .then(data => {
-      document.getElementById('loadingBox').style.display='none';
-      renderDashboard(data);
+      document.getElementById('loadingBox').style.display = 'none';
+      // Procesamos el JSON local estructurado
+      procesarDatosLocales(data);
     })
     .catch(err => {
-      console.error('Error cargando datos:', err);
-      document.getElementById('loadingBox').style.display='none';
-      document.getElementById('errorBox').innerHTML = 'Error al cargar datos.json. Asegurate de que el archivo esté creado en la raíz de tu repositorio.';
-      document.getElementById('errorBox').style.display='block';
+      console.error(err);
+      document.getElementById('loadingBox').style.display = 'none';
+      document.getElementById('errorBox').innerHTML = 'Error al leer datos.json local.';
+      document.getElementById('errorBox').style.display = 'block';
     });
 }
 
-function renderDashboard(data) {
-  // Renderizado básico de prueba con el JSON local
-  const transacciones = data.transacciones || [];
-  
-  document.getElementById('metricsBox').innerHTML = `
-    <div class="metric">
-      <p class="metric-label">Estado del Sistema</p>
-      <p class="metric-value" style="color:var(--accent-green);">Protegido y Seguro</p>
-    </div>
-    <div class="metric">
-      <p class="metric-label">Última Actualización</p>
-      <p class="metric-value" style="font-size:18px;">${data.actualizado || 'Reciente'}</p>
-    </div>
-  `;
-
-  if(transacciones.length === 0) {
-    document.getElementById('tablaContenido').innerHTML = '<p style="color:var(--t-aaa); font-size:13px;">El archivo datos.json está conectado correctamente pero aún no tiene transacciones registradas.</p>';
-  } else {
-    document.getElementById('tablaContenido').innerHTML = `<p>Se cargaron ${transacciones.length} registros correctamente.</p>`;
-  }
+function procesarDatosLocales(data) {
+  // Aquí mapeamos el formato que te mandará Make próximamente
+  CICLOS = [{ label: "Ciclo Actual", cicloDesde: new Date(), cicloHasta: new Date() }];
+  cicloActivo = 0;
+  datosCache[0] = data.transacciones || [];
+  buildDashboard(datosCache[0]);
 }
 
-// Iniciar carga al abrir
+function buildDashboard(datos) {
+  const totalGastos = datos.reduce((s, r) => s + (r.monto || 0), 0);
+  document.getElementById('cicloBadge').textContent = 'Ciclo Seguro';
+  document.getElementById('dashSub').textContent = `${datos.length} movimientos`;
+
+  document.getElementById('metricsBox').innerHTML = `
+    <div class="metric"><p class="metric-label">Total Gastos</p><p class="metric-value" style="color:var(--accent-red);">${fmt(totalGastos)}</p></div>
+  `;
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="summary-item"><span class="summary-label">Registros</span><span class="summary-value">${datos.length}</span></div>
+  `;
+
+  logDatos = datos;
+  renderLog(datos);
+  document.getElementById('tabMes').style.display = 'block';
+}
+
+function renderLog(datos) {
+  document.getElementById('logTable').innerHTML = `
+    <thead><tr><th>Fecha</th><th>Detalle</th><th>Categoría</th><th style="text-align:right">Monto</th></tr></thead>
+    <tbody>${datos.map(r => `
+      <tr>
+        <td>${r.fecha || ''}</td>
+        <td style="font-weight:600">${r.detalle || ''}</td>
+        <td><span class="cat-tag">${r.categoria || 'General'}</span></td>
+        <td style="text-align:right;font-weight:700">${fmt(r.monto || 0)}</td>
+      </tr>`).join('')}</tbody>`;
+}
+
+function toggleTheme() {
+  document.body.classList.toggle('light');
+}
+
 loadData();
 </script>
 </body>
