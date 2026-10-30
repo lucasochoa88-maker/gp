@@ -2,16 +2,17 @@
 <html lang="es">
 <head>
   <script>
-  // Configuración
+  // Configuración de Seguridad y Notificaciones
   const PASSWORD_CORRECTA = "Bastian2024"; // Cambiá esto por la contraseña que quieras
-  const TELEGRAM_BOT_TOKEN = "8882581814:AAE6epEj2lRoGyme98Slcaik4P8zodXT0j4"; // Token de tu bot de Telegram
-  const TELEGRAM_CHAT_ID = "8882581814";     // Tu Chat ID de Telegram
+  const TELEGRAM_BOT_TOKEN = "8882581814:AAE6epEj2lRoGyme98Slcaik4P8zodXT0j4"; 
+  const TELEGRAM_CHAT_ID = "8882581814";     
 
   function notificarTelegram(mensaje) {
     if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
     const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     fetch(url, {
       method: "POST",
+      mode: "no-cors",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: TELEGRAM_CHAT_ID,
@@ -19,25 +20,22 @@
       })
     }).catch(err => console.error("Error al enviar alerta:", err));
   }
-  // Lógica de acceso
+
   let passIngresada = prompt("Ingrese la contraseña de acceso al Dashboard:");
 
   if (passIngresada === PASSWORD_CORRECTA) {
-    // Acceso permitido
     notificarTelegram("🟢 Acceso AUTORIZADO al Dashboard de Finanzas.");
   } else {
-    // Acceso denegado
     notificarTelegram(`🚨 Intento de acceso FALLIDO al Dashboard. Intento con clave: "${passIngresada || 'vacío'}"`);
     alert("Contraseña incorrecta. Acceso denegado.");
-    document.write("<h1 style='text-align:center; margin-top:50px; family-font:sans-serif;'>Acceso No Autorizado</h1>");
-    window.stop(); // Detiene la carga del resto del sitio
+    document.write("<h1 style='text-align:center; margin-top:50px; font-family:sans-serif;'>Acceso No Autorizado</h1>");
+    window.stop();
   }
 </script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gastos Personales - Nuestro Termómetro Económico</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
 /* ─── VARIABLES TEMA SAAS FINTECH ─── */
 :root {
@@ -540,7 +538,7 @@ body {
 
 <div class="app-container">
 
-  <!-- HEADER MÓVIL (SÓLO VISIBLE EN DISPOSITIVOS MÓVILES) -->
+  <!-- HEADER MÓVIL -->
   <header class="mobile-header">
     <div class="mobile-brand">
       <div class="brand-icon" style="width:34px; height:34px; font-size:18px;">🏡</div>
@@ -551,7 +549,6 @@ body {
     <button class="hamburger-btn" onclick="toggleSidebar()" aria-label="Abrir Menú">☰</button>
   </header>
 
-  <!-- OVERLAY PARA CERRAR SIDEBAR MÓVIL -->
   <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
   <!-- BARRA LATERAL (SIDEBAR) -->
@@ -618,7 +615,7 @@ body {
     </div>
 
     <div id="errorBox" style="display:none;" class="error-msg"></div>
-    <div id="loadingBox" class="loading">Sincronizando datos con Google Sheets...</div>
+    <div id="loadingBox" class="loading">Sincronizando datos de forma segura...</div>
 
     <!-- TAB: ESTE CICLO -->
     <div id="tabMes" style="display:none;">
@@ -628,7 +625,6 @@ body {
 
       <div class="dashboard-grid">
         
-        <!-- COLUMNA PRINCIPAL (IZQUIERDA) -->
         <div class="grid-main-col">
           <div id="projBanner" class="proj-banner" style="display:none;">
             <div class="proj-banner-content">
@@ -650,7 +646,6 @@ body {
           </div>
         </div>
 
-        <!-- COLUMNA LATERAL (DERECHA) -->
         <div class="grid-side-col">
           <div id="cicloProgressWrap" class="ciclo-progress" style="display:none;">
             <div class="ciclo-progress-header">
@@ -674,7 +669,7 @@ body {
       </div>
     </div>
 
-    <!-- TAB: CÓMO VENIMOS (REDISAÑO SIMÉTRICO 3x2) -->
+    <!-- TAB: CÓMO VENIMOS -->
     <div id="tabComovenimos" style="display:none;">
       <div class="table-card">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
@@ -683,61 +678,36 @@ body {
         </div>
         
         <div class="cv-kpi-grid">
-          
           <div class="cv-kpi-card">
-            <div class="cv-kpi-header">
-              <span class="cv-kpi-label">Ciclo Analizado</span>
-              <div class="cv-kpi-icon">🗓️</div>
-            </div>
+            <div class="cv-kpi-header"><span class="cv-kpi-label">Ciclo Analizado</span><div class="cv-kpi-icon">🗓️</div></div>
             <div class="cv-kpi-value" id="cv-ciclo-val" style="font-size:20px;">—</div>
             <div class="cv-kpi-sub">Período en curso</div>
           </div>
-
           <div class="cv-kpi-card">
-            <div class="cv-kpi-header">
-              <span class="cv-kpi-label">Ingreso Mensual (Real)</span>
-              <div class="cv-kpi-icon">💰</div>
-            </div>
+            <div class="cv-kpi-header"><span class="cv-kpi-label">Ingreso Mensual (Real)</span><div class="cv-kpi-icon">💰</div></div>
             <div class="cv-kpi-value" id="cv-ingreso" style="color:var(--accent-green);">$0</div>
             <div class="cv-kpi-sub">Entradas consolidadas</div>
           </div>
-
           <div class="cv-kpi-card">
-            <div class="cv-kpi-header">
-              <span class="cv-kpi-label">Gastos hasta ahora</span>
-              <div class="cv-kpi-icon">💸</div>
-            </div>
+            <div class="cv-kpi-header"><span class="cv-kpi-label">Gastos hasta ahora</span><div class="cv-kpi-icon">💸</div></div>
             <div class="cv-kpi-value" id="cv-gastos" style="color:var(--accent-red);">$0</div>
             <div class="cv-kpi-sub">Total ejecutado</div>
           </div>
-
           <div class="cv-kpi-card">
-            <div class="cv-kpi-header">
-              <span class="cv-kpi-label">Objetivo de Ahorro</span>
-              <div class="cv-kpi-icon">🎯</div>
-            </div>
+            <div class="cv-kpi-header"><span class="cv-kpi-label">Objetivo de Ahorro</span><div class="cv-kpi-icon">🎯</div></div>
             <div class="cv-kpi-value" id="cv-ahorro" style="color:var(--accent-purple);">$1.500.000</div>
             <div class="cv-kpi-sub" id="cv-ahorro-pct">Meta fijada</div>
           </div>
-
           <div class="cv-kpi-card">
-            <div class="cv-kpi-header">
-              <span class="cv-kpi-label">Margen Ocio / Var. (Presup.)</span>
-              <div class="cv-kpi-icon">📐</div>
-            </div>
+            <div class="cv-kpi-header"><span class="cv-kpi-label">Margen Ocio / Var. (Presup.)</span><div class="cv-kpi-icon">📐</div></div>
             <div class="cv-kpi-value" id="cv-margen-presup" style="color:var(--accent-blue);">$0</div>
             <div class="cv-kpi-sub">Ingreso − Ahorro − Fijos</div>
           </div>
-
           <div class="cv-kpi-card">
-            <div class="cv-kpi-header">
-              <span class="cv-kpi-label">Margen Ocio / Var. (Real)</span>
-              <div class="cv-kpi-icon">⚡</div>
-            </div>
+            <div class="cv-kpi-header"><span class="cv-kpi-label">Margen Ocio / Var. (Real)</span><div class="cv-kpi-icon">⚡</div></div>
             <div class="cv-kpi-value" id="cv-margen-real">$0</div>
             <div class="cv-kpi-sub">Disponible real para gastar</div>
           </div>
-
         </div>
       </div>
     </div>
@@ -835,65 +805,8 @@ body {
 </div>
 
 <script>
-/* ─── CONSTANTES & CONFIGURACIÓN ─── */
-/* ─── API PROXY DESDE GOOGLE APPS SCRIPT ─── */
-// Reemplazá este enlace por la URL que te dio el despliegue de la Web App en Apps Script:
-const API_URL = "https://script.google.com/macros/s/AKfycbw2Nj2TH6ZkAoPe2YZIPwnsrSlDLEtIiPJakOwmVQXafQSzxJmIAB8nAvxHLAOhINSV/exec";
-
-function loadData(forzar) {
-  document.getElementById('loadingBox').style.display = 'block';
-  document.getElementById('errorBox').style.display = 'none';
-  ['tabMes','tabComovenimos','tabDetalle','tabComparativa','tabTarjetas'].forEach(id =>
-    document.getElementById(id).style.display = 'none');
-
-  fetch(API_URL)
-    .then(res => res.json())
-    .then(data => {
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      // Convertimos las matrices devueltas por Apps Script en formato de objetos
-      const rowsMovimientos = arrayToObjects(data.movimientos);
-      const rowsTarjetas = arrayToObjects(data.tarjetas);
-
-      // Guardamos en caché las tarjetas para la solapa de tarjetas
-      tarjetasRawRows = rowsTarjetas;
-
-      // Procesamos todo el historial exactamente como antes
-      procesarMovimientosUnificados(rowsMovimientos);
-
-      if (!CICLOS.length || !datosCache[cicloActivo]) {
-        document.getElementById('loadingBox').style.display = 'none';
-        document.getElementById('errorBox').innerHTML = 'No se encontraron datos de ciclos en la solapa Movimientos.';
-        document.getElementById('errorBox').style.display = 'block';
-        return;
-      }
-
-      buildDropdown();
-      buildDashboard(datosCache[cicloActivo]);
-    })
-    .catch(err => {
-      console.error('Error al conectar con la API:', err);
-      document.getElementById('loadingBox').style.display = 'none';
-      document.getElementById('errorBox').innerHTML =
-        'No se pudo conectar con el servicio de datos en tiempo real. Verificá la URL de tu Apps Script Web App y el token.';
-      document.getElementById('errorBox').style.display = 'block';
-    });
-}
-
-// Función auxiliar para transformar la matriz [ [encabezados], [fila1], [fila2] ] en objetos [{col: val}]
-function arrayToObjects(matrix) {
-  if (!matrix || matrix.length < 2) return [];
-  const headers = matrix[0];
-  return matrix.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((header, index) => {
-      obj[header] = row[index] !== undefined ? row[index] : "";
-    });
-    return obj;
-  });
-}
+/* ─── API PROXY DESDE GOOGLE APPS SCRIPT (SEGURO) ─── */
+const API_URL = https://script.google.com/macros/s/AKfycbw2Nj2TH6ZkAoPe2YZIPwnsrSlDLEtIiPJakOwmVQXafQSzxJmIAB8nAvxHLAOhINSV/exec";
 
 const MESES_DICT = {
   'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
@@ -1076,16 +989,16 @@ function setTab(tab, el) {
   if (tab==='tarjetas')    { document.getElementById('tabTarjetas').style.display='block'; initTarjetas(); }
 }
 
-function fetchCSV(url) {
-  return new Promise((resolve, reject) => {
-    Papa.parse(url, {
-      download: true,
-      downloadRequestHeaders: { 'X-Requested-With': 'XMLHttpRequest' },
-      header: true,
-      skipEmptyLines: true,
-      complete: r => resolve(r.data || []),
-      error: err => reject(err)
+// Transformador de matriz a objetos
+function arrayToObjects(matrix) {
+  if (!matrix || matrix.length < 2) return [];
+  const headers = matrix[0];
+  return matrix.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index] !== undefined ? row[index] : "";
     });
+    return obj;
   });
 }
 
@@ -1126,6 +1039,7 @@ function procesarMovimientosUnificados(rows) {
   }
 }
 
+// Carga segura desde Apps Script Web App
 function loadData(forzar) {
   if (forzar) { datosCache = {}; tarjetasRawRows = null; }
   document.getElementById('loadingBox').style.display='block';
@@ -1133,23 +1047,33 @@ function loadData(forzar) {
   ['tabMes','tabComovenimos','tabDetalle','tabComparativa','tabTarjetas'].forEach(id =>
     document.getElementById(id).style.display='none');
   
-  fetchCSV(MOVIMIENTOS_URL).then(rows => {
-    procesarMovimientosUnificados(rows);
-    if (!CICLOS.length || !datosCache[cicloActivo]) {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) throw new Error(data.error);
+
+      const rowsMovimientos = arrayToObjects(data.movimientos);
+      const rowsTarjetas = arrayToObjects(data.tarjetas);
+
+      tarjetasRawRows = rowsTarjetas;
+      procesarMovimientosUnificados(rowsMovimientos);
+
+      if (!CICLOS.length || !datosCache[cicloActivo]) {
+        document.getElementById('loadingBox').style.display='none';
+        document.getElementById('errorBox').innerHTML = 'No se encontraron datos de ciclos en la solapa Movimientos.';
+        document.getElementById('errorBox').style.display='block';
+        return;
+      }
+      buildDropdown();
+      buildDashboard(datosCache[cicloActivo]);
+    })
+    .catch(err => {
+      console.error('loadData error', err);
       document.getElementById('loadingBox').style.display='none';
-      document.getElementById('errorBox').innerHTML = 'No se encontraron datos de ciclos en la pestaña Movimientos.';
+      document.getElementById('errorBox').innerHTML =
+        'No se pudo conectar con el servicio seguro de Google. Verificá la URL del Web App y el token.';
       document.getElementById('errorBox').style.display='block';
-      return;
-    }
-    buildDropdown();
-    buildDashboard(datosCache[cicloActivo]);
-  }).catch(err => {
-    console.error('loadData error', err);
-    document.getElementById('loadingBox').style.display='none';
-    document.getElementById('errorBox').innerHTML =
-      'No se pudo conectar con Google Sheets. Verificá la publicación web de las solapas.';
-    document.getElementById('errorBox').style.display='block';
-  });
+    });
 }
 
 function parsearCiclo(rows) {
@@ -1557,22 +1481,12 @@ function getBancoColor(banco, idx) {
 
 function initTarjetas() {
   tarjetasLineSelected = [];
-  loadTarjetasData();
-}
-
-function loadTarjetasData() {
-  if (tarjetasRawRows) { procesarYRenderTarjetas(); return; }
-  document.getElementById('tarjetasErrorBox').style.display = 'none';
-  fetchCSV(TARJETAS_URL).then(rows => {
-    tarjetasRawRows = rows;
+  if (tarjetasRawRows) {
     procesarYRenderTarjetas();
-  }).catch(err => {
-    console.error('fetchTarjetas error', err);
-    document.getElementById('tarjetasErrorBox').innerHTML =
-      'No se pudo cargar el sheet de tarjetas. Verificá que esté publicado correctamente.';
+  } else {
+    document.getElementById('tarjetasErrorBox').innerHTML = 'Cargando datos de tarjetas...';
     document.getElementById('tarjetasErrorBox').style.display = 'block';
-    document.getElementById('tarjetasTotalBlock').style.display = 'none';
-  });
+  }
 }
 
 const MES_CAL_NOMBRES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Sep.','Oct.','Nov.','Dic.'];
@@ -1655,6 +1569,7 @@ function mesCorto(mesKey) {
 }
 
 function procesarYRenderTarjetas() {
+  if (!tarjetasRawRows || !tarjetasRawRows.length) return;
   const { porMes, mesesOrden, meta } = parseTarjetasRows(tarjetasRawRows);
   tarjetasPorMes = porMes;
   tarjetasMesesOrden = mesesOrden;
@@ -1666,6 +1581,7 @@ function procesarYRenderTarjetas() {
     tarjetasMesActivo = mesesOrden[mesesOrden.length - 1];
   }
   sel.value = tarjetasMesActivo;
+  document.getElementById('tarjetasErrorBox').style.display = 'none';
   renderTarjetas();
 }
 
@@ -2211,6 +2127,7 @@ function toggleTheme() {
   actualizarThemeBtn();
 })();
 
+// Iniciar carga de datos al abrir
 loadData();
 </script>
 </body>
