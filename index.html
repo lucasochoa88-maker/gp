@@ -836,9 +836,64 @@ body {
 
 <script>
 /* ─── CONSTANTES & CONFIGURACIÓN ─── */
-const SHEET_BASE = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTSR-jEHWGJNTU5Wk2HOm6U5_pQkHudAuzgL46QYnVg5WNv-2K9H8hDsNVGUtFifICuhdcCzBWich3V/pub';
-const MOVIMIENTOS_URL = `${SHEET_BASE}?single=true&output=csv`;
-const TARJETAS_URL = `${SHEET_BASE}?gid=1050964641&single=true&output=csv`;
+/* ─── API PROXY DESDE GOOGLE APPS SCRIPT ─── */
+// Reemplazá este enlace por la URL que te dio el despliegue de la Web App en Apps Script:
+const API_URL = "https://script.google.com/macros/s/AKfycbw2Nj2TH6ZkAoPe2YZIPwnsrSlDLEtIiPJakOwmVQXafQSzxJmIAB8nAvxHLAOhINSV/exec";
+
+function loadData(forzar) {
+  document.getElementById('loadingBox').style.display = 'block';
+  document.getElementById('errorBox').style.display = 'none';
+  ['tabMes','tabComovenimos','tabDetalle','tabComparativa','tabTarjetas'].forEach(id =>
+    document.getElementById(id).style.display = 'none');
+
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      // Convertimos las matrices devueltas por Apps Script en formato de objetos
+      const rowsMovimientos = arrayToObjects(data.movimientos);
+      const rowsTarjetas = arrayToObjects(data.tarjetas);
+
+      // Guardamos en caché las tarjetas para la solapa de tarjetas
+      tarjetasRawRows = rowsTarjetas;
+
+      // Procesamos todo el historial exactamente como antes
+      procesarMovimientosUnificados(rowsMovimientos);
+
+      if (!CICLOS.length || !datosCache[cicloActivo]) {
+        document.getElementById('loadingBox').style.display = 'none';
+        document.getElementById('errorBox').innerHTML = 'No se encontraron datos de ciclos en la solapa Movimientos.';
+        document.getElementById('errorBox').style.display = 'block';
+        return;
+      }
+
+      buildDropdown();
+      buildDashboard(datosCache[cicloActivo]);
+    })
+    .catch(err => {
+      console.error('Error al conectar con la API:', err);
+      document.getElementById('loadingBox').style.display = 'none';
+      document.getElementById('errorBox').innerHTML =
+        'No se pudo conectar con el servicio de datos en tiempo real. Verificá la URL de tu Apps Script Web App y el token.';
+      document.getElementById('errorBox').style.display = 'block';
+    });
+}
+
+// Función auxiliar para transformar la matriz [ [encabezados], [fila1], [fila2] ] en objetos [{col: val}]
+function arrayToObjects(matrix) {
+  if (!matrix || matrix.length < 2) return [];
+  const headers = matrix[0];
+  return matrix.slice(1).map(row => {
+    const obj = {};
+    headers.forEach((header, index) => {
+      obj[header] = row[index] !== undefined ? row[index] : "";
+    });
+    return obj;
+  });
+}
 
 const MESES_DICT = {
   'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
